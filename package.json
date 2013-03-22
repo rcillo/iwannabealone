@@ -1,0 +1,9 @@
+{
+  "name": "iwannabealone",
+  "description": "a game about how hard it is to get to be alone",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "express": "3.x"
+  }
+}
