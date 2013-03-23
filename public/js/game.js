@@ -4,7 +4,7 @@ var FPS = 30;
 
 var pressing = null;
 
-var player;
+var me;
 
 if(!Array.prototype.last) {
     Array.prototype.last = function() {
@@ -138,7 +138,8 @@ function drawTesselation(tesselation) {
   };
 }
 
-var socket = io.connect('http://iwannabealone.com');
+// var socket = io.connect('http://iwannabealone.com');
+var socket = io.connect('http://192.168.0.171');
 
 function addListeners() {
   $('canvas').mousedown(function(event) {
@@ -151,8 +152,17 @@ function addListeners() {
     var clickIndex = areaIndexForPoint({'x': event.offsetX, 'y': event.offsetY});
     clickIndex = game['players'].length - clickIndex - 1;
     var hitPlayer = game['players'][clickIndex];
-    hitPlayer['life'] = hitPlayer['life'] - 1;
-    game['totalGameLifeUnits'] = game['totalGameLifeUnits'] - 1;
+    if (hitPlayer['id'] == me['id']) {
+      if (hitPlayer['life'] < game['playerLife']) {
+        hitPlayer['life'] = hitPlayer['life'] + 1;
+        game['totalGameLifeUnits'] = game['totalGameLifeUnits'] + 1;
+      }
+    } else {
+      if (hitPlayer['life'] > 0) {
+        hitPlayer['life'] = hitPlayer['life'] - 1;
+        game['totalGameLifeUnits'] = game['totalGameLifeUnits'] - 1;
+      }
+    }
     socket.emit('hit', { 'id': hitPlayer['id'] });
   });
 }
@@ -163,7 +173,7 @@ function update() {
 }
 
 socket.on('dead', function(data) {
-  if (data['id'] == player['id']) {
+  if (data['id'] == me['id']) {
     console.log('ups i was killed');
   }
 });
@@ -171,7 +181,7 @@ socket.on('turn', function (data) {
   game = data
 });
 socket.on('connected', function (data) {
-  player = data;
+  me = data;
 });
 socket.on('start', function(data) {
   game = data;

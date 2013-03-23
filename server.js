@@ -100,12 +100,12 @@ io.sockets.on('connection', function (socket) {
     player = getPlayerById(data['id']);
     me = getPlayerBySocketId(socket.id);
     if (player == null) return;
-    if (player['id'] == me['id']) { // killing
+    if (player['id'] == me['id']) { // restoring
       if (player['life'] < playerLife) {
         player['life'] = player['life'] + 1;    
         game['totalGameLifeUnits'] = game['totalGameLifeUnits'] + 1;
       }
-    } else { // restoring
+    } else { // killing
       if (player['life'] == 0) return;
       player['life'] = player['life'] - 1;
       game['totalGameLifeUnits'] = game['totalGameLifeUnits'] - 1;
