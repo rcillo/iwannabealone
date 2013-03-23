@@ -138,7 +138,7 @@ function drawTesselation(tesselation) {
   };
 }
 
-var socket = io.connect('http://www.iwannabealone.com');
+var socket = io.connect('http://iwannabealone.com');
 
 function addListeners() {
   $('canvas').mousedown(function(event) {
