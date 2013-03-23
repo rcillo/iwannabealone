@@ -7,6 +7,13 @@ var file = new(nodeStatic.Server)('./public');
 
 app.listen(80);
 
+var game = {
+  'totalGameLifeUnits': 0,
+  'players': [
+    
+  ]
+};
+
 function handler (req, res) {
   req.addListener('end', function () {
     file.serve(req, res);
@@ -14,8 +21,19 @@ function handler (req, res) {
 }
 
 io.sockets.on('connection', function (socket) {
-  socket.emit('news', { hello: 'world' });
-  socket.on('my other event', function (data) {
-    console.log(data);
+  console.log('player joining');
+  game['players'].push({'life': 5 });
+  game['totalGameLifeUnits'] = game['totalGameLifeUnits'] + 5;
+  socket.emit('connected', {index: game['players'].length - 1});
+  socket.emit('start', game);
+  socket.broadcast.emit('turn', game);
+  
+  socket.on('tap', function (data) {
+    clickIndex = data['index']
+    game['players'][clickIndex]['life'] = game['players'][clickIndex]['life'] - 1;
+    game['totalGameLifeUnits'] = game['totalGameLifeUnits'] - 1;
+    socket.broadcast.emit('turn', game);
+    socket.emit('turn', game);
   });
+
 });

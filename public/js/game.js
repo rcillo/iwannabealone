@@ -1,9 +1,37 @@
 var TOO_SMALL = 0.00001;
 
+var FPS = 30;
+
+var pressing = null;
+
+var myIndex;
+
+colors = [
+'#00accd',
+'#0db14b',
+'#92278f',
+'#00909e',
+'#d063a5',
+'#fcaf17'
+]
+
+pressing_colors = [
+'#006699',
+'#006633',
+'#660066',
+'#006699',
+'#993366',
+'#cc6600'
+]
+
 if(!Array.prototype.last) {
     Array.prototype.last = function() {
         return this[this.length - 1];
     }
+}
+
+function centerPoint() {
+  return {'x': window.innerWidth / 2.0, 'y': window.innerHeight / 2.0};
 }
 
 function ortoDistance(thisPoint, thatPoint) {
@@ -79,18 +107,47 @@ function rectanglePizzaTesselateStrategy(game) {
   return polygons;
 }
 
+//+ Jonas Raoni Soares Silva
+//@ http://jsfromhell.com/math/is-point-in-poly [v1.0]
+function isPointInPoly(poly, pt){
+  for(var c = false, i = -1, l = poly.length, j = l - 1; ++i < l; j = i)
+    ((poly[i].y <= pt.y && pt.y < poly[j].y) || (poly[j].y <= pt.y && pt.y < poly[i].y))
+    && (pt.x < (poly[j].x - poly[i].x) * (pt.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x)
+    && (c = !c);
+  return c;
+}
+
+function areaIndexForPoint(point) {
+  var tesselation = rectanglePizzaTesselateStrategy(game);
+  var center = centerPoint();
+  for (var i = tesselation.length - 1; i >= 0; i--) {
+    poly = tesselation[i];
+    poly.unshift(center);
+    poly.push(center);
+    if (isPointInPoly(poly, point)) return i;
+  };
+}
+
 function drawTesselation(tesselation) {
   var canvas = $('#game');
   c2 = canvas[0].getContext('2d');
   c2.canvas.width  = window.innerWidth;
   c2.canvas.height = window.innerHeight;
+
+  var pressingIndex;
+  if (pressing != null) pressingIndex = areaIndexForPoint(pressing);
+
   for (var i = tesselation.length - 1; i >= 0; i--) {
     points = tesselation[i];
-    c2.fillStyle = '#f00';
+    if (pressing != null && pressingIndex == i) {
+      c2.fillStyle = pressing_colors[i % colors.length];  
+    } else {
+      c2.fillStyle = colors[i % colors.length];  
+    }
     c2.beginPath();
     c2.moveTo(window.innerWidth / 2.0, window.innerHeight / 2.0);
-    for (var i = points.length - 1; i >= 0; i--) {
-      point = points[i];
+    for (var j = points.length - 1; j >= 0; j--) {
+      point = points[j];
       c2.lineTo(point['x'], point['y']);
     };
     c2.closePath();
@@ -98,52 +155,63 @@ function drawTesselation(tesselation) {
   };
 }
 
-function render(game) {
-  var canvas = $('#game');
-  ctx = canvas[0].getContext('2d');
-  ctx.canvas.width  = window.innerWidth;
-  ctx.canvas.height = window.innerHeight;
-  // ctx.strokeStyle = colorPicker.val();
-  ctx.lineCap = "round"
-  ctx.lineWidth = 15;
+var socket = io.connect('http://192.168.25.4');
 
-  for (var i = game.players.length - 1; i >= 0; i--) {
-    game.players[i]
-  };
-
-  data = {
-    'line': {
-      'startX':10,
-      'startY':10,
-      'endX':200,
-      'endY':200  
-    }
-  }
-
-  ctx.beginPath();
-  ctx.moveTo(data.line.startX,data.line.startY);
-  ctx.lineTo(data.line.endX, data.line.endY);
-  // ctx.strokeStyle = data.line.color;
-  ctx.stroke();
-  // ctx.strokeStyle = colorPicker.val();
-
+function addListeners() {
+  $('canvas').mousedown(function(event) {
+    pressing = {'x': event.offsetX, 'y': event.offsetY};
+  });
+  $(document).mouseup(function(event) {
+    pressing = null;
+  });
+  $('canvas').click(function(event) {
+    var clickIndex = areaIndexForPoint({'x': event.offsetX, 'y': event.offsetY});
+    clickIndex = game['players'].length - clickIndex - 1;
+    game['players'][clickIndex]['life'] = game['players'][clickIndex]['life'] - 1;
+    game['totalGameLifeUnits'] = game['totalGameLifeUnits'] - 1;
+    socket.emit('tap', { index: clickIndex });
+  });
 }
 
-var socket = io.connect('http://localhost');
-socket.on('news', function (data) {
-  console.log(data);
-  socket.emit('my other event', { my: 'data' });
+function update() {
+  var tesselation = rectanglePizzaTesselateStrategy(game);
+  drawTesselation(tesselation);
+}
+
+
+socket.on('turn', function (data) {
+  game = data
+});
+socket.on('connected', function (data) {
+  myIndex = data['index'];
+});
+socket.on('start', function(data) {
+  game = data;
+  addListeners();
+  setInterval(function() {
+    update();
+  }, 1000/FPS);
 });
 
-jQuery(document).ready(function($) {
-  var game = {
-    'totalGameLifeUnits': 50,
-    'players': [
-      {'life': 20 },
-      // {'life': 25 }
-    ]
+// jQuery(document).ready(function($) {
+  
+// });
+
+(function($) {
+  var IS_IOS = /iphone|ipad/i.test(navigator.userAgent);
+  $.fn.nodoubletapzoom = function() {
+    if (IS_IOS)
+      $(this).bind('touchstart', function preventZoom(e) {
+        var t2 = e.timeStamp
+          , t1 = $(this).data('lastTouch') || t2
+          , dt = t2 - t1
+          , fingers = e.originalEvent.touches.length;
+        $(this).data('lastTouch', t2);
+        if (!dt || dt > 500 || fingers > 1) return; // not double-tap
+ 
+        e.preventDefault(); // double tap - prevent the zoom
+        // also synthesize click events we just swallowed up
+        $(this).trigger('click').trigger('click');
+      });
   };
-  var tesselation = rectanglePizzaTesselateStrategy(game);
-  console.log(tesselation);
-  drawTesselation(tesselation);
-});
+})(jQuery);
