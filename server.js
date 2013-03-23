@@ -8,9 +8,16 @@ var file = new(nodeStatic.Server)('./public');
 app.listen(80);
 
 var quitMessage = [
-  "Fuck!",
-  "Oh Shit",
-  "=("
+  "You are too popular. You can't be alone.",
+  "Your facebook friends are waiting for you.",
+  "Maybe it's better you go check your facebook",
+  "You thought that being alone was easy?",
+  "You belong to a crowd.",
+  "You are one too many.",
+  "Come on, you know it's hard to be alone.",
+  "You'll have to do better than that to be alone.",
+  "Your #fail was epic.",
+  "Too fast to like, too slow you died."
 ];
 
 var quitCounter = 0;
