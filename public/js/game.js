@@ -121,7 +121,7 @@ function drawTesselation(tesselation) {
 
   for (var i = tesselation.length - 1; i >= 0; i--) {
     points = tesselation[i];
-    player = game['players'][i];
+    player = game['players'][tesselation.length - i - 1];
     if (pressing != null && pressingIndex == i) {
       c2.fillStyle = player['pressing_colors']; 
     } else {
@@ -185,16 +185,9 @@ function addListeners() {
     var clickIndex = areaIndexForPoint({'x': event.offsetX, 'y': event.offsetY});
     clickIndex = game['players'].length - clickIndex - 1;
     var hitPlayer = game['players'][clickIndex];
-    if (hitPlayer['id'] == me['id']) {
-      if (hitPlayer['life'] < game['playerLife']) {
-        hitPlayer['life'] = hitPlayer['life'] + 1;
-        game['totalGameLifeUnits'] = game['totalGameLifeUnits'] + 1;
-      }
-    } else {
-      if (hitPlayer['life'] > 0) {
-        hitPlayer['life'] = hitPlayer['life'] - 1;
-        game['totalGameLifeUnits'] = game['totalGameLifeUnits'] - 1;
-      }
+    if (hitPlayer['life'] > 0) {
+      hitPlayer['life'] = hitPlayer['life'] - 1;
+      game['totalGameLifeUnits'] = game['totalGameLifeUnits'] - 1;
     }
     socket.emit('hit', { 'id': hitPlayer['id'] });
   });

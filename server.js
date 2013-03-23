@@ -60,7 +60,7 @@ function addPlayer() {
   };
   playerId = playerId + 1;
   colorIndex = (colorIndex + 1) % colors.length;
-  game['players'].push(player);
+  game['players'].unshift(player);
   game['totalGameLifeUnits'] = game['totalGameLifeUnits'] + playerLife;
   return player;
 }
@@ -84,9 +84,11 @@ function getPlayerBySocketId(socketId) {
 
 function removePlayerSocketById(socketId) {
   var defector = getPlayerBySocketId(socketId);
+  if (defector == null) return;
   var index = game['players'].indexOf(defector);
   game['players'].splice(index, 1);
   game['totalGameLifeUnits'] = game['totalGameLifeUnits'] - defector['life'];
+  return defector['id'];
 }
 
 io.sockets.on('connection', function (socket) {
@@ -100,7 +102,7 @@ io.sockets.on('connection', function (socket) {
   socket.broadcast.emit('turn', game);
 
   socket.on('disconnect', function(data) {
-    removePlayerSocketById(socket.id);
+    defectorId = removePlayerSocketById(socket.id);
     socket.broadcast.emit('turn', game);
   });
   
@@ -108,22 +110,14 @@ io.sockets.on('connection', function (socket) {
     player = getPlayerById(data['id']);
     me = getPlayerBySocketId(socket.id);
     if (player == null) return;
-    if (player['id'] == me['id']) { // restoring
-      if (player['life'] < playerLife) {
-        player['life'] = player['life'] + 1;    
-        game['totalGameLifeUnits'] = game['totalGameLifeUnits'] + 1;
-      }
-    } else { // killing
-      if (player['life'] == 0) return;
-      player['life'] = player['life'] - 1;
-      game['totalGameLifeUnits'] = game['totalGameLifeUnits'] - 1;
-      if (player['life'] == 0) {
-        player = getPlayerById(player['id']);
-        var index = game['players'].indexOf(player);
-        game['players'].splice(index, 1);
-        socket.broadcast.emit('dead', {'id': player['id'], 'text': quitMessage[quitCounter]});
-        quitCounter = (quitCounter + 1) % quitMessage.length;
-      }
+    if (player['life'] == 0) return;
+    player['life'] = player['life'] - 1;
+    game['totalGameLifeUnits'] = game['totalGameLifeUnits'] - 1;
+    if (player['life'] == 0) {
+      var index = game['players'].indexOf(player);
+      game['players'].splice(index, 1);
+      socket.broadcast.emit('dead', {'id': player['id'], 'text': quitMessage[quitCounter]});
+      quitCounter = (quitCounter + 1) % quitMessage.length;
     }
     socket.broadcast.emit('turn', game);
   });
