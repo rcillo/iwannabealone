@@ -138,7 +138,7 @@ function drawTesselation(tesselation) {
   };
 }
 
-var socket = io.connect('http://iwannabealone.com');
+var socket = io.connect('http://192.168.0.171');
 
 function addListeners() {
   $('canvas').mousedown(function(event) {
@@ -165,7 +165,7 @@ function update() {
 socket.on('dead', function(data) {
   if (data['id'] == player['id']) {
     console.log('ups i was killed');
-  };
+  }
 });
 socket.on('turn', function (data) {
   game = data

@@ -13,7 +13,7 @@ function handler (req, res) {
   });
 }
 
-var playerLife = 20;
+var playerLife = 42;
 
 var game = {
   'totalGameLifeUnits': 0,
@@ -62,24 +62,51 @@ function getPlayerById(anId) {
     player = game['players'][i];
     if (player['id'] == anId) return player;
   }
+  return null;
+}
+
+function removePlayerSocketById(socketId) {
+  for (var i = game['players'].length - 1; i >= 0; i--) {
+    player = game['players'][i];
+    if (player['socketId'] == socketId) {
+      var defector = player;
+      var index = game['players'].indexOf(defector);
+      game['players'].splice(index, 1);
+      game['totalGameLifeUnits'] = game['totalGameLifeUnits'] - defector['life'];
+    }
+  }
 }
 
 io.sockets.on('connection', function (socket) {
   var player = addPlayer();
+  player['socketId'] = socket.id;
 
   socket.emit('connected', player);
 
   socket.emit('start', game);
 
   socket.broadcast.emit('turn', game);
+
+  socket.on('disconnect', function(data) {
+    removePlayerSocketById(socket.id);
+    socket.broadcast.emit('turn', game);
+  });
   
   socket.on('hit', function (data) {
     player = getPlayerById(data['id']);
-    player['life'] = player['life'] - 1;
-    if (player['life'] == 0) {
-      socket.broadcast.emit('dead', {'id': player['id']});
-    };
-    game['totalGameLifeUnits'] = game['totalGameLifeUnits'] - 1;
+    if (player == null) return;
+    if (player['id'] == playerId) { // killing
+      if (player['life'] < playerLife) {
+        player['life'] = player['life'] + 1;    
+        game['totalGameLifeUnits'] = game['totalGameLifeUnits'] + 1;
+      }
+    } else { // restoring
+      player['life'] = player['life'] - 1;
+      if (player['life'] == 0) {
+        socket.broadcast.emit('dead', {'id': player['id']});
+      }
+      game['totalGameLifeUnits'] = game['totalGameLifeUnits'] - 1;
+    }
     socket.broadcast.emit('turn', game);
   });
 
