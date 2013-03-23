@@ -7,6 +7,14 @@ var file = new(nodeStatic.Server)('./public');
 
 app.listen(80);
 
+var quitMessage = [
+  "Fuck!",
+  "Oh Shit",
+  "=("
+];
+
+var quitCounter = 0;
+
 function handler (req, res) {
   req.addListener('end', function () {
     file.serve(req, res);
@@ -110,7 +118,11 @@ io.sockets.on('connection', function (socket) {
       player['life'] = player['life'] - 1;
       game['totalGameLifeUnits'] = game['totalGameLifeUnits'] - 1;
       if (player['life'] == 0) {
-        socket.broadcast.emit('dead', {'id': player['id']});
+        player = getPlayerById(player['id']);
+        var index = game['players'].indexOf(player);
+        game['players'].splice(index, 1);
+        socket.broadcast.emit('dead', {'id': player['id'], 'text': quitMessage[quitCounter]});
+        quitCounter = (quitCounter + 1) % quitMessage.length;
       }
     }
     socket.broadcast.emit('turn', game);

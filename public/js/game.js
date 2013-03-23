@@ -135,7 +135,40 @@ function drawTesselation(tesselation) {
     };
     c2.closePath();
     c2.fill();
-  };
+
+    textPoint = {
+      'x': window.innerWidth / 2.0,
+      'y': window.innerHeight / 2.0
+    };
+    for (var l = points.length - 1; l >= 0; l--) {
+      point = points[l];
+      textPoint['x'] = (textPoint['x'] + point['x']) / 2.0;
+      textPoint['y'] = (textPoint['y'] + point['y']) / 2.0;
+    }
+    // var clickIndex = areaIndexForPoint(textPoint);
+    // clickIndex = game['players'].length - clickIndex - 1;
+    var myId;
+    for (var z = game['players'].length - 1; z >= 0; z--) {
+      x = game['players'][z];
+      if (x['id'] == me['id']) myId = z;
+    };
+    if (i == tesselation.length - myId - 1 && tesselation.length > 1) {
+      c2.fillStyle = "white";
+      c2.font = "3em Quantico";
+      c2.fillText("YOU", textPoint['x'], textPoint['y']);  
+    }
+  }
+
+  if (tesselation.length == 1) {
+      textPoint = {
+        'x': window.innerWidth / 2.0,
+        'y': window.innerHeight / 2.0
+      };
+      c2.fillStyle = "white";
+      c2.font = "3em Quantico";
+      c2.fillText("YOU ARE ALONE", textPoint['x'], textPoint['y']);
+  }
+
 }
 
 // var socket = io.connect('http://iwannabealone.com');
@@ -174,7 +207,9 @@ function update() {
 
 socket.on('dead', function(data) {
   if (data['id'] == me['id']) {
-    console.log('ups i was killed');
+    $('#game').remove();
+    $('#fucked').show();
+    $('#fucked').html(data['text']);
   }
 });
 socket.on('turn', function (data) {
@@ -193,4 +228,5 @@ socket.on('start', function(data) {
 
 window.addEventListener('load', function() {
     new FastClick(document.body);
+    $('#fucked').hide();
 }, false);
