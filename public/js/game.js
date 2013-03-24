@@ -122,11 +122,7 @@ function drawTesselation(tesselation) {
   for (var i = tesselation.length - 1; i >= 0; i--) {
     points = tesselation[i];
     player = game['players'][tesselation.length - i - 1];
-    if (pressing != null && pressingIndex == i) {
-      c2.fillStyle = player['pressing_colors']; 
-    } else {
-      c2.fillStyle = player['color'];
-    }
+    c2.fillStyle = player['color'];
     c2.beginPath();
     c2.moveTo(window.innerWidth / 2.0, window.innerHeight / 2.0);
     for (var j = points.length - 1; j >= 0; j--) {
@@ -154,7 +150,7 @@ function drawTesselation(tesselation) {
     };
     if (i == tesselation.length - myId - 1 && tesselation.length > 1) {
       c2.fillStyle = "white";
-      c2.font = "3em Quantico";
+      c2.font = "1em Quantico";
       c2.fillText("YOU", textPoint['x'], textPoint['y']);  
     }
   }
@@ -165,14 +161,14 @@ function drawTesselation(tesselation) {
         'y': window.innerHeight / 2.0
       };
       c2.fillStyle = "white";
-      c2.font = "3em Quantico";
-      c2.fillText("YOU ARE ALONE", textPoint['x'], textPoint['y']);
+      c2.font = "1em Quantico";
+      c2.fillText("YOU ARE ALONE", textPoint['x']-120, textPoint['y']);
   }
 
 }
 
 // var socket = io.connect('http://iwannabealone.com');
-var socket = io.connect('http://192.168.0.171');
+var socket = io.connect('http://192.168.25.4');
 
 function addListeners() {
   $('canvas').mousedown(function(event) {

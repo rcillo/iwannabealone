@@ -8,16 +8,16 @@ var file = new(nodeStatic.Server)('./public');
 app.listen(80);
 
 var quitMessage = [
-  "You are too popular. You can't be alone.",
-  "Your facebook friends are waiting for you.",
-  "Maybe it's better you go check your facebook",
-  "You thought that being alone was easy?",
-  "You belong to a crowd.",
-  "You are one too many.",
-  "Come on, you know it's hard to be alone.",
-  "You'll have to do better than that to be alone.",
-  "Your #fail was epic.",
-  "Too fast to like, too slow you died."
+  "You are too<br /> popular. You<br />can't be alone.",
+  "Your facebook<br /> friends are<br /> waiting for you.",
+  "Maybe it's better<br /> you go check<br /> your facebook",
+  "You thought<br /> that being<br /> alone was easy?",
+  "You belong<br /> to a crowd.",
+  "You are<br /> one too many.",
+  "Come on,<br /> you know it's<br /> hard to be alone.",
+  "You'll have<br /> to do better<br /> than that to be alone.",
+  "Your #fail<br /> was epic.",
+  "Too fast to<br /> like, too slow<br /> you died."
 ];
 
 var quitCounter = 0;
@@ -39,21 +39,14 @@ var game = {
 var playerId = 0;
 
 colors = [
-'#00accd',
-'#0db14b',
-'#92278f',
-'#00909e',
-'#d063a5',
-'#fcaf17'
-];
-
-pressing_colors = [
-'#006699',
-'#006633',
-'#660066',
-'#006699',
-'#993366',
-'#cc6600'
+'#993399',
+'#99cc33',
+'#009999',
+'#ff0066',
+'#cc0000',
+'#33cc99',
+'#9999cc',
+'#ffcc66'
 ];
 
 var colorIndex = 0;
@@ -62,7 +55,6 @@ function addPlayer() {
   var player = {
     'life': playerLife,
     'color': colors[colorIndex],
-    'pressing_colors': colors[colorIndex],
     'id': playerId
   };
   playerId = playerId + 1;
@@ -126,6 +118,9 @@ io.sockets.on('connection', function (socket) {
       socket.broadcast.emit('dead', {'id': player['id'], 'text': quitMessage[quitCounter]});
       quitCounter = (quitCounter + 1) % quitMessage.length;
     }
+    // if (player['id'] == me['id']) {
+    //   socket.emit('turn', game);
+    // };
     socket.broadcast.emit('turn', game);
   });
 
